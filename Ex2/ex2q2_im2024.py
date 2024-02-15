@@ -3,10 +3,11 @@ import numpy as np
 
 
 def drawRhombus():
-    squareSize = 600
+    factor = 2
+    squareSize = 200 * factor
     image = np.zeros((squareSize, squareSize), dtype=np.uint8)
     middle = squareSize // 2
-    triSize = 150
+    triSize = 50 * factor
     for x in range(middle - triSize, middle + triSize):
         for y in range(middle - triSize, middle + triSize):
             if abs(x - middle) + abs(y - middle) < triSize:
@@ -27,7 +28,7 @@ def addNoise(image):
 
     # Add Gaussian noise to these pixels
     # Choosing a small std deviation to not overwhelm the image
-    noise = np.random.normal(0, 25, num_noisy_pixels)  # Adjust the 25 as needed
+    noise = np.random.normal(0, 15, num_noisy_pixels)  # Adjust the 25 as needed
 
     for i in range(num_noisy_pixels):
         noisy_val = noisy_image[rand_x[i], rand_y[i]] + noise[i]
@@ -36,41 +37,81 @@ def addNoise(image):
     return noisy_image
 
 
-def edgeDetection(image, kernel):
-    image_height, image_width = image.shape
-    kernel_height, kernel_width = kernel.shape
+def convolve(image, kernel):
+    """
+    Manually apply a 2D convolution operation, without using any libraries that perform the operation.
+    """
+    # Kernel needs to be flipped both horizontally and vertically
+    kernel = np.flipud(np.fliplr(kernel))
 
-    # Calculate the padding width and height
-    pad_height = kernel_height // 2
-    pad_width = kernel_width // 2
+    # Gather the dimensions to define the size of the output image
+    xImage = image.shape[0]
+    yImage = image.shape[1]
+    xKernel = kernel.shape[0]
+    yKernel = kernel.shape[1]
 
-    # Pad the original image to handle edges
+    # Define the output image matrix, ensuring to adjust for the loss of border pixels
+    output = np.zeros((xImage - xKernel + 1, yImage - yKernel + 1))
+
+    # Execute convolution operation (manual implementation)
+    for x in range(xImage - xKernel + 1):
+        for y in range(yImage - yKernel + 1):
+            # Element-wise multiplication and summation
+            output[x, y] = np.sum(image[x:x + xKernel, y:y + yKernel] * kernel)
+
+    return output
+
+def apply_sobel_operator(image):
+    """
+    Apply the Sobel operator to an image to detect edges.
+    """
+    sobel_x = np.array([
+        [-1, 0, 1],
+        [-2, 0, 2],
+        [-1, 0, 1]
+    ])
+    sobel_y = np.array([
+        [-1, -2, -1],
+        [ 0,  0,  0],
+        [ 1,  2,  1]
+    ])
+    gradient_x = convolve(image, sobel_x)
+    gradient_y = convolve(image, sobel_y)
+    magnitude = np.sqrt(gradient_x**2 + gradient_y**2)
+    return magnitude
+
+
+
+def apply_gaussian_blur(image):
+    # Assuming kernel is a 2D numpy array for Gaussian blur
+    # Initialize the output image
+    kernel = np.array([
+        [1, 2, 1],
+        [2, 4, 2],
+        [1, 2, 1]
+    ], dtype=np.float32) / 16.0
+
+    output_image = np.zeros_like(image)
+
+    # Kernel dimensions
+    k_height, k_width = kernel.shape
+    pad_height, pad_width = k_height // 2, k_width // 2
+
+    # Pad the image
     padded_image = np.pad(image, ((pad_height, pad_height), (pad_width, pad_width)), mode='constant', constant_values=0)
 
-    # Prepare the output image with the same size as the original image
-    result = np.zeros(image.shape)
+    # Convolve the kernel with the image
+    for row in range(image.shape[0]):
+        for col in range(image.shape[1]):
+            output_image[row, col] = np.sum(kernel * padded_image[row:row + k_height, col:col + k_width])
 
-    # Perform the convolution operation
-    for i in range(image_height):
-        for j in range(image_width):
-            # Extract the current region of interest
-            region = padded_image[i:i + kernel_height, j:j + kernel_width]
-            # Perform element-wise multiplication and sum the result
-            result[i, j] = np.sum(region * kernel)
-
-    return result
+    return output_image
 
 
 if __name__ == '__main__':
     image = drawRhombus()
     noise = addNoise(image)
-    kernel = np.array([[-1, -1, -1],
-                       [-1, 8, -1],
-                       [-1, -1, -1]])
-    edge = edgeDetection(noise,kernel)
-    cv.imshow('beforeNoise', image)
-    cv.imshow('afterNoise', noise)
-    cv.imshow('edge', edge)
+    edge = apply_gaussian_blur(noise)
+    cv.imwrite('noisy.png', noise)
+    cv.imwrite('findEdges.png', apply_sobel_operator(edge))
 
-    cv.waitKey(0)
-    cv.destroyAllWindows()
