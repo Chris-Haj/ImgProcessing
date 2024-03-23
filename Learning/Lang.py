@@ -3,7 +3,7 @@ import pytesseract as tess
 
 
 def getText(lang):
-    img = cv.imread('img.png')
+    img = cv.imread('img_1.png')
     text = tess.image_to_string(image=img, lang=lang)
     return text
 
