@@ -17,7 +17,7 @@ def apply_fft_compression(image_path, cutoff_frequency):
 
     # Zeroing out the high frequencies
     # Here, instead of a mask, we directly modify the FFT shifted matrix
-    f_shift[crow - cutoff_frequency:crow + cutoff_frequency, ccol - cutoff_frequency:ccol + cutoff_frequency] = 0
+    f_shift[crow - cutoff_frequency:crow + cutoff_frequency, ccol - cutoff_frequency:ccol + cutoff_frequency] = 1
 
     # Creating an outline for the preserved frequencies
     mask = np.zeros(img.shape, np.uint8)
