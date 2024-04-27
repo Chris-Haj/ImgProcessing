@@ -1,0 +1,20 @@
+As part of the project, each pair of students who register using the link below will receive a set of images containing
+coins from various countries. The images are arranged by increasing levels of difficulty, starting with images of individual
+coins (to be used as a starting point for the project) and ending with images that show several coins.
+
+Your task in this project is to identify and sum the value of the money in each image. The project must be submitted as
+original code that contains all the images and is ready to run. When the project is run, the images should be displayed in
+a graphical window, with the amount of money shown in the image title. The images will open in order of difficulty,
+starting with the images of individual coins and then the images with several coins.
+
+You are required to attach a detailed document to the project that explains the methodology and techniques you used to
+identify and sum the value of the coins in the images.
+
+The purpose of this work is to expose you to the challenges in the field of object recognition in image processing.
+It is important to emphasize in advance that, unlike other exercises or projects you may be accustomed to, in this field
+there are sometimes no clear-cut answers of "correct" or "incorrect." It is not always possible to achieve 100% success.
+Our goal is to perform the best processing and recognition for all the images, but there may be images where we cannot
+precisely identify the total amount of the coins. Therefore, the grade will also be based on your ability to think,
+innovate, and strive to overcome these challenges. It is very important that you explain your solution in a clear and detailed manner.
+Additionally, part of the grade will also be given for the ability to identify the amount of money in several additional
+images of coins from the same country by images not provided to you in advance (do not worry, this is a small part of the grade).
