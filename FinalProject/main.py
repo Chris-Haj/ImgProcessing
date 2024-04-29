@@ -2,10 +2,15 @@ import cv2 as cv
 import skimage as ski
 import matplotlib.pyplot as plt
 
-Images = {0.05: './CoinImages/0.05Francs.jpg',
-          0.1: './CoinImages/0.1Francs.jpg',
-          0.2: './CoinImages/0.2Francs.jpg',
-          5: './CoinImages/5Francs.jpg'}
+Images = {'0.05': './CoinImages/0.05Francs.jpg',
+          '0.1': './CoinImages/0.1Francs.jpg',
+          '0.2': './CoinImages/0.2Francs.jpg',
+          '5': './CoinImages/5Francs.jpg',
+          'combo1': './CoinImages/combo1.jpg',
+          'combo2': './CoinImages/combo2.jpg',
+          'combo3': './CoinImages/combo3.jpg',
+          'combo4': './CoinImages/combo4.jpg',
+          'combo5': './CoinImages/combo5.jpg'}
 
 ProcessedImages = ['./ProcessedImages/Processed0.05Francs.jpg',
                    './ProcessedImages/Processed0.1Francs.jpg',
@@ -63,80 +68,96 @@ def loadImageIntoGrayScale(imagePath, fx=0.5, fy=0.5):
     image = cv.resize(image, None, None, fx, fy, cv.INTER_LINEAR)
     return image
 
-
-def openClose(image, iterations=1):
+def opening(image, iterations=1):
     for i in range(iterations):
-        image = cv.resize(image, None, None, fx=0.5, fy=0.5, interpolation=cv.INTER_LINEAR)
-        image = cv.resize(image, None, None, fx=2, fy=2, interpolation=cv.INTER_LINEAR)
+        image = erosion(image)
+        image = dilation(image)
     return image
 
-def closeOpen(image, iterations=1):
+def closing(image, iterations=1):
     for i in range(iterations):
-        image = cv.resize(image, None, None, fx=2, fy=2, interpolation=cv.INTER_LINEAR)
-        image = cv.resize(image, None, None, fx=0.5, fy=0.5, interpolation=cv.INTER_LINEAR)
+        image = dilation(image)
+        image = erosion(image)
     return image
 
-
-def dilation(image, kernelSize=(5, 5), iterations=1):
+def dilation(image, kernelSize=(5, 5)):
     kernel = cv.getStructuringElement(cv.MORPH_RECT, kernelSize)
-    return cv.dilate(image, kernel, iterations=iterations)
+    return cv.dilate(image, kernel)
 
-
-def erosion(image, kernelSize=(5, 5), iterations=1):
+def erosion(image, kernelSize=(5, 5)):
     kernel = cv.getStructuringElement(cv.MORPH_RECT, kernelSize)
-    return cv.erode(image, kernel, iterations=iterations)
-
+    return cv.erode(image, kernel)
 
 def gaussianBlur(image, kernelSize=(5, 5), sigmaX=0):
     return cv.GaussianBlur(image, kernelSize, sigmaX)
 
+
 def getContours(image):
-    img = cv.GaussianBlur(image.copy(), (11, 11), 0)
-    edges = cv.Canny(img, 100, 200)
+    # img = cv.GaussianBlur(image.copy(), (11, 11), 0)
+    edges = cv.Canny(image.copy(), 100, 200)
     contours, _ = cv.findContours(edges, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-    # cv.drawContours(img, contours, -1, (0, 255, 0), 3)
+
     return contours
 
-if __name__ == '__main__':
-    ImagesPaths = [image for image in Images.values()]
-    GrayImages = [loadImageIntoGrayScale(image, 0.1, 0.1) for image in ImagesPaths]
+
+def mainTesting2():
+    ImagesPaths = [image for image in Images.values()][:4]
+    GrayImages = [loadImageIntoGrayScale(image, 2, 2) for image in ImagesPaths]
     OriginalSizes = [image.shape for image in GrayImages]
     clahe = cv.createCLAHE(15, (5, 10))
 
-
     for image in GrayImages:
         plt.imshow(image, cmap='gray')
         plt.show()
-        # contours = getContours(image)
-
-        image = openClose(image, iterations=3)
-
+        image = opening(image, iterations=3)
+        image = gaussianBlur(image, (9, 9), 0)
+        contours = getContours(image)
         image = clahe.apply(src=image)
-        image = openClose(image, iterations=10)
-        thresh, image = cv.threshold(image, 100, 200, cv.THRESH_BINARY + cv.THRESH_OTSU)
-        image = gaussianBlur(image, (5, 5), 0)
-
+        thresh, image = cv.threshold(image, 150, 200, cv.THRESH_BINARY + cv.THRESH_OTSU)
+        image = closing(image, iterations=10)
+        cv.drawContours(image, contours, -1, (255, 255, 125), 10)
         plt.imshow(image, cmap='gray')
         plt.show()
 
 
-def mainTesting2(GrayImages):
-    pass
-
-
-def mainTesting1(GrayImages):
+def mainTesting1():
+    ImagesPaths = [image for image in Images.values()]
+    GrayImages = [loadImageIntoGrayScale(image, 2, 2) for image in ImagesPaths]
+    OriginalSizes = [image.shape for image in GrayImages]
     clahe = cv.createCLAHE(15, (5, 10))
 
     for image in GrayImages:
         plt.imshow(image, cmap='gray')
         plt.show()
 
-
-        image = dilation(image, iterations=3)
+        image = opening(image, iterations=3)
 
         image = clahe.apply(src=image)
-        image = dilation(image, iterations=5)
-        thresh, image = cv.threshold(image, 0, 200, cv.THRESH_BINARY + cv.THRESH_OTSU)
+        image = opening(image, iterations=10)
+        thresh, image = cv.threshold(image, 100, 200, cv.THRESH_BINARY + cv.THRESH_OTSU)
         image = gaussianBlur(image, (5, 5), 0)
         plt.imshow(image, cmap='gray')
         plt.show()
+
+
+if __name__ == '__main__':
+    mainTesting2()
+    # ImagesPaths = [image for image in Images.values()]
+    # GrayImages = [loadImageIntoGrayScale(image, 2, 2) for image in ImagesPaths]
+    # OriginalSizes = [image.shape for image in GrayImages]
+    # clahe = cv.createCLAHE(15, (5, 10))
+    #
+    # for image in GrayImages:
+    #     plt.imshow(image, cmap='gray')
+    #     plt.show()
+    #     # contours = getContours(image)
+    #
+    #     image = opening(image, iterations=3)
+    #
+    #     image = clahe.apply(src=image)
+    #     image = closing(image, iterations=10)
+    #     thresh, image = cv.threshold(image, 100, 200, cv.THRESH_BINARY + cv.THRESH_OTSU)
+    #     image = gaussianBlur(image, (5, 5), 0)
+    #
+    #     plt.imshow(image, cmap='gray')
+    #     plt.show()
